@@ -1,10 +1,12 @@
 import type {ChartData} from "src/types";
+import { AxesRenderer } from "./axes.renderer";
 import {ChartRenderer} from "./chart.renderer";
 
 export class CanvasRenderer {
   canvas: HTMLCanvasElement;
   context: CanvasRenderingContext2D;
   chartRenderer: ChartRenderer;
+  axesRenderer: AxesRenderer;
   #chart: ChartData;
   constructor(canvas: HTMLCanvasElement, chart: ChartData) {
     this.canvas = canvas;
@@ -14,6 +16,7 @@ export class CanvasRenderer {
       this.canvas.width,
       this.canvas.height,
     );
+    this.axesRenderer = new AxesRenderer(chart.label, this.canvas.width, this.canvas.height, 20, 20);
     this.#chart = chart;
     this.draw();
   }
@@ -34,6 +37,7 @@ export class CanvasRenderer {
   draw() {
     this.clear();
     this.context.drawImage(this.chartRenderer.draw(), 0, 0);
+    this.context.drawImage(this.axesRenderer.draw(), 0, 0);
   }
 
   clear() {

@@ -5,7 +5,7 @@
   import YearPicker from "./components/YearPicker.svelte";
   import ButtonCheckbox from "./components/ButtonCheckbox.svelte";
   import Chart from "./components/Chart.svelte";
-  let from, to, fromYear=getHashValue("from"), toYear = getHashValue("to");
+  let from, to, fromYear=getHashValue("from"), toYear = getHashValue("to"), scale="5";
   onMount(async () => {
     [from, to] = await getMinMaxYears();
   });
@@ -48,7 +48,8 @@
         />
       </div>
       <div>
-        <Chart fromYear={fromYear} toYear={toYear} />
+        <input type="range" from="10" to="50" bind:value={scale} />
+        <Chart fromYear={fromYear} toYear={toYear} scale={scale} />
       </div>
     </main>
   </div>

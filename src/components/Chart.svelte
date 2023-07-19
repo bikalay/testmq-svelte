@@ -16,6 +16,7 @@
   let canvasEl, scrollEl, scrollWraper, canvasRenderer;
   export let fromYear = "0000";
   export let toYear = "9999";
+  export let scale = "5";
 
   async function setChartData(
     fromYear: string,
@@ -46,7 +47,7 @@
     fromYear,
     toYear,
     scrollWraper ? scrollWraper.scrollLeft : 0,
-    5,
+    parseInt(scale),
   );
   onMount(async () => {
     canvasRenderer = new CanvasRenderer(canvasEl, {
@@ -54,7 +55,7 @@
       name: "temperature",
       label: "Temperature",
     });
-    await setChartData(fromYear, toYear, 0, 5);
+    await setChartData(fromYear, toYear, 0, parseInt(scale));
     let timeoutId = false;
     scrollWraper.onscroll = function () {
       if (timeoutId) {
@@ -63,10 +64,10 @@
       }
       timeoutId = setTimeout(() => {
         requestAnimationFrame(async () => {
-          await setChartData(fromYear, toYear, scrollWraper.scrollLeft, 5);
+          await setChartData(fromYear, toYear, scrollWraper.scrollLeft, parseInt(scale));
           timeoutId = null;
         });
-      }, 100);
+      }, 10);
     };
   });
 </script>
