@@ -48,7 +48,8 @@
         />
       </div>
       <div>
-        <input type="range" from="10" to="50" bind:value={scale} />
+        <span>{scale}<span>
+        <input type="range" min="3" max="65" bind:value={scale} />
         <Chart fromYear={fromYear} toYear={toYear} scale={scale} />
       </div>
     </main>
