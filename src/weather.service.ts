@@ -9,8 +9,8 @@ import {
 } from "./utils/db.utils";
 import {STORE_TEMPERATURE_NAME, STORE_PRECIPITATION_NAME} from "./db.config";
 import {getYearFromISODate} from "./utils/date.utils";
-export const TEMPERATURE_URL = "../data/temperature.json";
-export const PRECIPITATION_URL = "../data/precipitation.json";
+export const TEMPERATURE_URL = "/temperature.json";
+export const PRECIPITATION_URL = "/precipitation.json";
 
 /**
  * initializeDBWithData.

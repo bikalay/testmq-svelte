@@ -15,6 +15,12 @@ global.fetch = jest.fn((url) => {
   }
 }) as jest.Mock;
 
+jest.mock("../../properties", () => {
+  return {API_ENDPOINT: ""}
+});
+
+
+
 describe("API Utils", () => {
   describe("getData", () => {
     it("should request data with fetch api", async () => {

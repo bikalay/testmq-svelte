@@ -8,6 +8,9 @@ import {
   initializeDBWithData,
 } from "../weather.service";
 import {count} from "../utils/db.utils";
+jest.mock("../properties", () => {
+  return {API_ENDPOINT: "../data"}
+});
 
 jest.mock("../utils/api.utils", () => {
   return {
