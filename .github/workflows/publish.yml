@@ -21,7 +21,8 @@ jobs:
         run: |
           npm ci
           npm run build
-
+      - name: Copy Data
+        run: cp -r data dist/data
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
