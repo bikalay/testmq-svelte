@@ -1,15 +1,30 @@
+import {STORE_TEMPERATURE_NAME} from "../../db.config";
 import {getChartFrame, getChartPoints} from "../chart.utils";
 jest.mock("../db.utils", () => {
   return {
-    getDB: () => Promise.resolve({}),
-    getMinimalValueByField: () => Promise.resolve({t: "1970-01-01"}),
-    getMaximalValueByField: () => Promise.resolve({t: "1990-01-01"}),
+    getMinimalValueByField: (_, fieldName) => {
+      switch (fieldName) {
+        case "t":
+          return Promise.resolve("1970-01-01");
+        case "v":
+          return Promise.resolve(-5);
+      }
+    },
+    getMaximalValueByField: (_, fieldName) => {
+      switch (fieldName) {
+        case "t":
+          return Promise.resolve("1990-01-01");
+        case "v":
+          return Promise.resolve(5);
+      }
+    },
+    count: () => Promise.resolve(3),
   };
 });
 
 describe("Chat Utils", () => {
   describe("getChatPoints", () => {
-    it("should return correct points for positive chart from two points", () => {
+    it("should return correct points for positive chart from two points", async () => {
       const points = getChartPoints(
         [
           {v: 2, t: "2023-01-01"},
@@ -23,7 +38,7 @@ describe("Chat Utils", () => {
         {v: 5, t: "2023-01-02", x: 10, y: 0},
       ]);
     });
-    it("should return correct points for positive chart from three points", () => {
+    it("should return correct points for positive chart from three points", async () => {
       const points = getChartPoints(
         [
           {v: 2, t: "2023-01-01"},
@@ -39,7 +54,7 @@ describe("Chat Utils", () => {
         {v: 0, t: "2023-01-03", x: 10, y: 10},
       ]);
     });
-    it("should return correct points for negative chart", () => {
+    it("should return correct points for negative chart", async () => {
       const points = getChartPoints(
         [
           {v: -5, t: "2023-01-01"},
@@ -58,18 +73,46 @@ describe("Chat Utils", () => {
   });
   describe("getChartFrame", () => {
     it("should return correct date frame without offset", async () => {
-      let [from, to] = await getChartFrame("1980", "1980", 1000, 0, 1);
+      let [from, to] = await getChartFrame(
+        STORE_TEMPERATURE_NAME,
+        "1980",
+        "1980",
+        1000,
+        0,
+        1,
+      );
       expect(from).toBe("1980-01-01");
       expect(to).toBe("1980-12-31");
-      [from, to] = await getChartFrame("", "", 100, 0, 5);
+      [from, to] = await getChartFrame(
+        STORE_TEMPERATURE_NAME,
+        "",
+        "",
+        100,
+        0,
+        5,
+      );
       expect(from).toBe("1970-01-01");
       expect(to).toBe("1970-01-21");
     });
     it("should return correct dates frame with offset", async () => {
-      let [from, to] = await getChartFrame("1980", "1980", 1000, 9, 1);
+      let [from, to] = await getChartFrame(
+        STORE_TEMPERATURE_NAME,
+        "1980",
+        "1980",
+        1000,
+        9,
+        1,
+      );
       expect(from).toBe("1980-01-10");
       expect(to).toBe("1980-12-31");
-      [from, to] = await getChartFrame("", "", 100, 45, 5);
+      [from, to] = await getChartFrame(
+        STORE_TEMPERATURE_NAME,
+        "",
+        "",
+        100,
+        45,
+        5,
+      );
       expect(from).toBe("1970-01-10");
       expect(to).toBe("1970-01-30");
     });

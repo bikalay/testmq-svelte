@@ -5,9 +5,16 @@
   import YearPicker from "./components/YearPicker.svelte";
   import ButtonCheckbox from "./components/ButtonCheckbox.svelte";
   import Chart from "./components/Chart.svelte";
-  let from, to, fromYear=getHashValue("from"), toYear = getHashValue("to"), scale="5";
+  import {STORE_TEMPERATURE_NAME, STORE_PRECIPITATION_NAME} from "./db.config";
+  let from,
+    to,
+    fromYear = getHashValue("from") || "",
+    toYear = getHashValue("to") || "",
+    scale = "6",
+    chart = getHashValue("chart") || STORE_TEMPERATURE_NAME;
+
   onMount(async () => {
-    [from, to] = await getMinMaxYears();
+    [from, to] = await getMinMaxYears(chart);
   });
   function onFromYearChanged(event: {detail: string}) {
     fromYear = event.detail;
@@ -17,6 +24,10 @@
     toYear = event.detail;
     setHashValue("to", toYear);
   }
+  function onChartChanged(event: {detail: string}) {
+    chart = event.detail;
+    setHashValue("chart", chart);
+  }
 </script>
 
 <div class="container">
@@ -24,10 +35,22 @@
   <div class="d-flex">
     <aside>
       <div class="mb-5">
-        <ButtonCheckbox label="Temperature" />
+        <ButtonCheckbox
+          label="Temperature"
+          value={STORE_TEMPERATURE_NAME}
+          name="chart-type"
+          selectedValue={chart}
+          on:change={onChartChanged}
+        />
       </div>
       <div class="mb-5">
-        <ButtonCheckbox label="Preseption" />
+        <ButtonCheckbox
+          label="Preseption"
+          value={STORE_PRECIPITATION_NAME}
+          name="chart-type"
+          selectedValue={chart}
+          on:change={onChartChanged}
+        />
       </div>
     </aside>
     <main class="grow-1">
@@ -48,9 +71,8 @@
         />
       </div>
       <div>
-        <span>{scale}<span>
-        <input type="range" min="3" max="65" bind:value={scale} />
-        <Chart fromYear={fromYear} toYear={toYear} scale={scale} />
+        <span>Scale: </span><input type="range" min="6" max="65" bind:value={scale} />
+        <Chart {fromYear} {toYear} {scale} {chart} />
       </div>
     </main>
   </div>

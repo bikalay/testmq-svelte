@@ -29,11 +29,9 @@ export class DateScaleRenderer extends BaseRenderer {
     this.context.font = "12px serif";
     this.context.textAlign = "center";
     preparedData.map((item) => {
-      if (item.x) {
-        const dashSize = item.label ? 5 : 3;
-        this.context.moveTo(item.x + 0.5, this.offsetY - dashSize);
-        this.context.lineTo(item.x + 0.5, this.offsetY + dashSize);
-      }
+      const dashSize = item.label ? 5 : 3;
+      this.context.moveTo(item.x + 0.5, this.offsetY - dashSize);
+      this.context.lineTo(item.x + 0.5, this.offsetY + dashSize);
       this.context.fillText(item.label, item.x, this.offsetY + 15);
     });
     this.context.strokeStyle = "red";

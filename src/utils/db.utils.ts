@@ -19,7 +19,10 @@ export type IndexQuery = {
 
 /**
  * initialize.
- * @returns {Promise<IDBDatabase>}
+ * Initializes and returns db instance;
+ * @param {string} dbName - DB Name;
+ *  @param {number} dbVersion - DB Version
+ * @returns {Promise<IDBDatabase>} - DB Instance;
  */
 export function initialize(
   dbName: string,
@@ -59,9 +62,10 @@ export function initialize(
 
 /**
  * getDB
- * @returns {Promise<IDBDatabase>}
+ * Creates new db instance if not initialized or returns existing db
+ * @returns {Promise<IDBDatabase>} - DB Instance
  */
-export async function getDB() {
+export async function getDB(): Promise<IDBDatabase> {
   if (!DB) {
     DB = await initialize(DB_NAME, DB_VERSION, STORES_CONFIG);
   }
@@ -70,27 +74,37 @@ export async function getDB() {
 
 /**
  * Count
- * @param {IDBDatabase} db
- * @param {string} objectStoreName
- * @returns {Promise<number>}
+ * Returns number of rows in object store;
+ * @param {string} objectStoreName - Object Store Name
+ * @returns {Promise<number>} - Number of rows
  */
-export function count(db: IDBDatabase, objectStoreName: string) {
-  const transaction = db.transaction([objectStoreName], "readonly");
-  const objectStore = transaction.objectStore(objectStoreName);
-  const request = objectStore.count();
-  return new Promise((resolve) => {
-    request.onsuccess = () => {
-      resolve(request.result);
-    };
-  });
+export async function count(objectStoreName: string): Promise<number> {
+  try {
+    const db = await getDB();
+    const transaction = db.transaction([objectStoreName], "readonly");
+    const objectStore = transaction.objectStore(objectStoreName);
+    const request = objectStore.count();
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => {
+        resolve(request.result);
+      };
+      request.onerror = () => {
+        reject(request.error);
+      };
+    });
+  } catch (e) {
+    console.error(e);
+    console.log(objectStoreName);
+  }
 }
 
 /**
  * clear.
- * @param {IDBDatabase} db
- * @param {string} objectStoreName
+ * Clears object store
+ * @param {string} objectStoreName - Object Store Name
  */
-export function clear(db: IDBDatabase, objectStoreName: string) {
+export async function clear(objectStoreName: string) {
+  const db = await getDB();
   const transaction = db.transaction([objectStoreName], "readwrite");
   const objectStore = transaction.objectStore(objectStoreName);
   const request = objectStore.clear();
@@ -106,15 +120,16 @@ export function clear(db: IDBDatabase, objectStoreName: string) {
 
 /**
  * query.
- * @param {IDBDatabase} db
- * @param {string} objectStoreName
- * @param {IndexQuery} query
+ * Returns rows buy query
+ * @param {string} objectStoreName - Object Store Name
+ * @param {IndexQuery} query - Query
+ * @returns {Promise<Array<T>>} - List of data rows
  */
-export function query<T>(
-  db: IDBDatabase,
+export async function query<T>(
   objectStoreName: string,
   query?: IndexQuery,
 ): Promise<Array<T>> {
+  const db = await getDB();
   const transaction = db.transaction([objectStoreName], "readonly");
   const objectStore = transaction.objectStore(objectStoreName);
   let request: IDBRequest;
@@ -137,21 +152,14 @@ export function query<T>(
 
 /**
  * insertMany.
- *
- * @param {IDBDatabase} db
- * @param {string} objectStoreName
- * @param {Array} data
+ * Inserts array of documents
+ * @param {string} objectStoreName - Object Store Name
+ * @param {Array} data - list of data
  */
-export async function insertMany(
-  db: IDBDatabase,
-  objectStoreName: string,
-  data: Array<any>,
-) {
+export async function insertMany(objectStoreName: string, data: Array<any>) {
+  const db = await getDB();
   const transaction = db.transaction([objectStoreName], "readwrite");
   const objectStore = transaction.objectStore(objectStoreName);
-  const objectStoreConfig = STORES_CONFIG.find(
-    (config) => config.name === objectStoreName,
-  );
   data.forEach((item) => {
     objectStore.put(item);
   });
@@ -167,17 +175,16 @@ export async function insertMany(
 
 /**
  * getMinimalValueByField.
- *
- * @param {IDBDatabase} db
- * @param {string} objectStoreName
- * @param {string} key
- * @returns {Promise<any>}
+ * Returns minimal field value form object store
+ * @param {string} objectStoreName - Object Store Name
+ * @param {string} key - Field name
+ * @returns {Promise<any>} - Minimal value
  */
 export async function getMinimalValueByField(
-  db: IDBDatabase,
   objectStoreName: string,
   key: string,
 ): Promise<any> {
+  const db = await getDB();
   const transaction = db.transaction([objectStoreName], "readonly");
   const objectStore = transaction.objectStore(objectStoreName);
   const index = objectStore.index(key);
@@ -198,17 +205,16 @@ export async function getMinimalValueByField(
 
 /**
  * getMaximalValueByField.
- *
- * @param {IDBDatabase} db
- * @param {string} objectStoreName
- * @param {string} key
- * @returns {Promise<*>}
+ * Returns max field value from object store
+ * @param {string} objectStoreName - Object Store Name
+ * @param {string} key - Field name
+ * @returns {Promise<*>} - Max value
  */
 export async function getMaximalValueByField(
-  db: IDBDatabase,
   objectStoreName: string,
   key: string,
 ): Promise<any> {
+  const db = await getDB();
   const transaction = db.transaction([objectStoreName], "readonly");
   const objectStore = transaction.objectStore(objectStoreName);
   const index = objectStore.index(key);

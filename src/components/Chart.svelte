@@ -2,8 +2,8 @@
   import {onMount} from "svelte";
   import {CanvasRenderer} from "../core/canvas.renderer";
   import {
-    getTemperature,
-    getTemperatureCount,
+    getWeatherData,
+    getDataCount,
     getMinMaxYears,
   } from "../weather.service";
   import {
@@ -13,12 +13,15 @@
     getDifferenceInDays,
   } from "../utils/date.utils";
   import {getChartFrame} from "../utils/chart.utils";
+  import {STORE_TEMPERATURE_NAME} from "../db.config";
   let canvasEl, scrollEl, scrollWraper, canvasRenderer;
   export let fromYear = "0000";
   export let toYear = "9999";
   export let scale = "5";
+  export let chart = STORE_TEMPERATURE_NAME;
 
   async function setChartData(
+    chart: string,
     fromYear: string,
     toYear: string,
     offset: number = 0,
@@ -26,17 +29,17 @@
   ) {
     if (canvasRenderer && canvasEl) {
       const [from, to, originalFrom, originalTo] = await getChartFrame(
+        chart,
         fromYear,
         toYear,
         canvasEl.width,
         offset,
         step,
       );
-      const data = await getTemperature(from, to);
+      const data = await getWeatherData(chart, from, to);
       canvasRenderer.chart = {
         data,
-        name: "temperature",
-        label: "Temperature",
+        name: chart,
       };
       const daysNumber = getDifferenceInDays(originalFrom, originalTo);
       scrollEl.style.width = daysNumber * step + "px";
@@ -44,18 +47,19 @@
   }
 
   $: setChartData(
+    chart,
     fromYear,
     toYear,
     scrollWraper ? scrollWraper.scrollLeft : 0,
     parseInt(scale),
   );
+
   onMount(async () => {
     canvasRenderer = new CanvasRenderer(canvasEl, {
       data: [],
-      name: "temperature",
-      label: "Temperature",
+      name: chart,
     });
-    await setChartData(fromYear, toYear, 0, parseInt(scale));
+    await setChartData(chart, fromYear, toYear, 0, parseInt(scale));
     let timeoutId = false;
     scrollWraper.onscroll = function () {
       if (timeoutId) {
@@ -64,22 +68,35 @@
       }
       timeoutId = setTimeout(() => {
         requestAnimationFrame(async () => {
-          await setChartData(fromYear, toYear, scrollWraper.scrollLeft, parseInt(scale));
+          await setChartData(
+            chart,
+            fromYear,
+            toYear,
+            scrollWraper.scrollLeft,
+            parseInt(scale),
+          );
           timeoutId = null;
         });
       }, 10);
     };
+    scrollWraper.addEventListener("wheel", function (e) {
+      e.preventDefault();
+      scrollWraper.scrollLeft += e.deltaY;
+    });
   });
 </script>
 
-<div style="width: 800px">
-  <div style="overflow-x: scroll; max-width: 100%" bind:this={scrollWraper}>
-    <div bind:this={scrollEl}>&nbsp;</div>
-  </div>
+<div style="width: 800px;">
   <canvas
     style="width: 800px; height: 500px;position: absolute;"
     width="800"
     height="500"
     bind:this={canvasEl}
   />
+  <div
+    style="overflow-x: scroll; max-width: 100%; width:800px; position: absolute; height: 520px;"
+    bind:this={scrollWraper}
+  >
+    <div bind:this={scrollEl}>&nbsp;</div>
+  </div>
 </div>

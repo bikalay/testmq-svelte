@@ -2,6 +2,7 @@ import type {ChartData} from "src/types";
 import {AxesRenderer} from "./axes.renderer";
 import {ChartRenderer} from "./chart.renderer";
 import {DateScaleRenderer} from "./x-scale.renderer";
+import {ValuesScale} from "./y-scale.renderer";
 
 export class CanvasRenderer {
   canvas: HTMLCanvasElement;
@@ -9,6 +10,7 @@ export class CanvasRenderer {
   chartRenderer: ChartRenderer;
   axesRenderer: AxesRenderer;
   dateScaleRenderer: DateScaleRenderer;
+  valuesScaleRenderer: ValuesScale;
   #chart: ChartData;
   constructor(canvas: HTMLCanvasElement, chart: ChartData) {
     this.canvas = canvas;
@@ -17,30 +19,39 @@ export class CanvasRenderer {
       chart,
       this.canvas.width,
       this.canvas.height,
+      30,
+      20,
     );
     this.axesRenderer = new AxesRenderer(
       chart.label,
       this.canvas.width,
       this.canvas.height,
-      20,
+      30,
       20,
     );
     this.dateScaleRenderer = new DateScaleRenderer(
       chart.data,
       this.canvas.width,
       this.canvas.height,
-      0,
+      30,
       this.canvas.height - 20,
+    );
+    this.valuesScaleRenderer = new ValuesScale(
+      chart.data,
+      this.canvas.width,
+      this.canvas.height,
+      30,
+      20,
     );
     this.#chart = chart;
     this.draw();
   }
 
   set chart(value: ChartData) {
-    this.chartRenderer.data = value.data;
-    this.chartRenderer.label = value.label;
     this.chartRenderer.name = value.name;
+    this.chartRenderer.data = value.data;
     this.dateScaleRenderer.data = value.data;
+    this.valuesScaleRenderer.data = value.data;
     this.#chart = value;
     this.draw();
   }
@@ -54,6 +65,7 @@ export class CanvasRenderer {
     this.context.drawImage(this.chartRenderer.draw(), 0, 0);
     this.context.drawImage(this.axesRenderer.draw(), 0, 0);
     this.context.drawImage(this.dateScaleRenderer.draw(), 0, 0);
+    this.context.drawImage(this.valuesScaleRenderer.draw(), 0, 0);
   }
 
   clear() {
