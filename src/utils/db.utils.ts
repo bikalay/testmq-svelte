@@ -1,4 +1,5 @@
 import {DB_NAME, DB_VERSION, STORES_CONFIG} from "../db.config";
+import { Mutex } from "./mutex";
 
 let DB: IDBDatabase | null = null;
 
@@ -17,6 +18,8 @@ export type IndexQuery = {
   keyRange?: IDBKeyRange;
 };
 
+const mutex = new Mutex();
+
 /**
  * initialize.
  * Initializes and returns db instance;
@@ -30,11 +33,13 @@ export function initialize(
   oStores: Array<ObjectStore>,
 ): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
+    console.log("initialize db");
     const request = window.indexedDB.open(dbName, dbVersion);
     request.onerror = () => {
       reject(request.error);
     };
     request.onupgradeneeded = () => {
+      console.log("initialize onupgradeneeded")
       const db = request.result;
       oStores.forEach((os) => {
         let store: IDBObjectStore | undefined;
@@ -54,6 +59,7 @@ export function initialize(
       });
     };
     request.onsuccess = () => {
+      console.log("initialize onsuccess")
       const db = request.result;
       resolve(db);
     };
@@ -66,9 +72,14 @@ export function initialize(
  * @returns {Promise<IDBDatabase>} - DB Instance
  */
 export async function getDB(): Promise<IDBDatabase> {
+  console.log("getDB");
+  const unlock = await mutex.lock();
   if (!DB) {
     DB = await initialize(DB_NAME, DB_VERSION, STORES_CONFIG);
+  } else {
+    console.log("return existing db");
   }
+  unlock();
   return DB;
 }
 
@@ -161,7 +172,7 @@ export async function insertMany(objectStoreName: string, data: Array<any>) {
   const transaction = db.transaction([objectStoreName], "readwrite");
   const objectStore = transaction.objectStore(objectStoreName);
   data.forEach((item) => {
-    objectStore.put(item);
+    objectStore.add(item);
   });
   return new Promise((resolve, reject) => {
     transaction.oncomplete = (event) => {

@@ -19,6 +19,7 @@
   export let toYear = "9999";
   export let scale = "5";
   export let chart = STORE_TEMPERATURE_NAME;
+  let dataLoaded = false;
 
   async function setChartData(
     chart: string,
@@ -37,6 +38,7 @@
         step,
       );
       const data = await getWeatherData(chart, from, to);
+      dataLoaded = !!data.length;
       canvasRenderer.chart = {
         data,
         name: chart,
@@ -87,8 +89,9 @@
 </script>
 
 <div style="width: 800px;">
+  <h1 style={dataLoaded ? "display: none" : ""}>Loading...</h1>
   <canvas
-    style="width: 800px; height: 500px;position: absolute;"
+    style="width: 800px; height: 500px;position: absolute; display:{dataLoaded ? 'block' : 'block'}"
     width="800"
     height="500"
     bind:this={canvasEl}

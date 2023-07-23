@@ -9,11 +9,14 @@
   function onYearSelected(event) {
     dispatch('change', event.target.value);
   };
+  function onOpen(event) {
+    dispatch('open');
+  }
 
 </script>
 
 <div class="year-picker w-100">
-  <select class="w-100" on:change={onYearSelected} bind:value={value}>
+  <select class="w-100" on:change={onYearSelected} on:click={onOpen} on:focus={onOpen} bind:value={value}>
     <option value="">{placeholder}</option>
     {#each years as year}
       <option value={year.toString()}>{year}</option>

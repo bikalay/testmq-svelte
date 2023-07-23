@@ -1,6 +1,5 @@
-
-export const DB_NAME =  "weather";
-export const DB_VERSION = 3;
+export const DB_NAME =  "weather-dev";
+export const DB_VERSION = 6;
 export const STORE_TEMPERATURE_NAME = "temperature";
 export const STORE_PRECIPITATION_NAME = "precipitation";
 export const STORES_CONFIG = [

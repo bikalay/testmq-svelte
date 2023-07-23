@@ -1,6 +1,6 @@
 <script lang="ts">
   import {onMount} from "svelte";
-  import {getMinMaxYears} from "./weather.service";
+  import {getMinMaxYears, addListener} from "./weather.service";
   import {setHashValue, getHashValue} from "./utils/location.utils";
   import YearPicker from "./components/YearPicker.svelte";
   import ButtonCheckbox from "./components/ButtonCheckbox.svelte";
@@ -27,6 +27,9 @@
   function onChartChanged(event: {detail: string}) {
     chart = event.detail;
     setHashValue("chart", chart);
+  }
+  async function onOpenYearSelect() {
+    [from, to] = await getMinMaxYears(chart);
   }
 </script>
 
@@ -59,6 +62,7 @@
           {from}
           {to}
           on:change={onFromYearChanged}
+          on:open={onOpenYearSelect}
           placeholder="Select Start Year"
           value={fromYear}
         />
@@ -66,12 +70,18 @@
           {from}
           {to}
           on:change={onToYearChanged}
+          on:open={onOpenYearSelect}
           placeholder="Select End Year"
           value={toYear}
         />
       </div>
       <div>
-        <span>Scale: </span><input type="range" min="6" max="65" bind:value={scale} />
+        <span>Scale: </span><input
+          type="range"
+          min="6"
+          max="65"
+          bind:value={scale}
+        />
         <Chart {fromYear} {toYear} {scale} {chart} />
       </div>
     </main>
