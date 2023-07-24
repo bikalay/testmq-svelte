@@ -1,37 +1,43 @@
 import type {ItemData} from "./types";
 import {getData} from "./utils/api.utils";
+import type {IndexQuery} from "./utils/db.utils";
 import {
   count,
-  getMaximalValueByField,
-  getMinimalValueByField,
   insertMany,
   query,
 } from "./utils/db.utils";
 import {STORE_TEMPERATURE_NAME, STORE_PRECIPITATION_NAME} from "./db.config";
-import {getYearFromISODate} from "./utils/date.utils";
-import {Mutex} from "./utils/mutex";
+import {addDays, getDifferenceInDays} from "./utils/date.utils";
+import { Mutex } from "./utils/mutex";
 export const TEMPERATURE_URL = "/temperature.json";
 export const PRECIPITATION_URL = "/precipitation.json";
+
+const minMaxDates = {};
+
 const mutex = new Mutex();
-const listeners = [];
 
-export function addListener(listener) {
-  listeners.push(listener);
+export function createQuery(from: string, to: string) {
+  const query: IndexQuery = {indexName: "t"};
+  if (from && to) {
+    query.keyRange = IDBKeyRange.bound(from, to);
+    return query;
+  }
+  if (from) {
+    query.keyRange = IDBKeyRange.lowerBound(from);
+    return query;
+  }
+  if (to) {
+    query.keyRange = IDBKeyRange.upperBound(to);
+    return query;
+  }
+  return null;
 }
 
-function fireEvent() {
-  listeners.forEach((listener) => listener());
-}
-
-/**
- * initializeDBWithData.
- * Fills object store from api
- * @param {string} storeName - Object store name
- */
-export async function initializeDBWithData(storeName: string) {
-  console.log("initializeDBWithData");
-  const unlock = await mutex.lock();
-  const isEmpty = !(await count(storeName));
+export async function getDataFromApi(
+  storeName: string,
+  from?: string,
+  to?: string,
+) {
   let url = "";
   switch (storeName) {
     case STORE_TEMPERATURE_NAME:
@@ -41,47 +47,36 @@ export async function initializeDBWithData(storeName: string) {
       url = PRECIPITATION_URL;
       break;
   }
-  if (isEmpty) {
-    const data = await getData<ItemData>(url);
-    console.log("getData From server");
-    console.time("insert");
-    await insertMany(storeName, data.slice(0, 500));
-    fireEvent();
-    insertDataBatch(storeName, data, 500);
-    console.timeEnd("insert");
-    console.log("insertMany");
-  }
-  unlock();
-}
-
-async function insertDataBatch(storeName, data, from) {
-  for (let i = from; i < data.length; i += 500) {
-    console.log("data", i);
-    await new Promise((resolve) => {
-      ((i) =>
-        setTimeout(() => {
-          insertMany(storeName, data.slice(i, i + 500)).then(() => {
-            fireEvent();
-            resolve(null);
-          });
-        }, 1000))(i);
-    });
-    console.log("dataInserted", i);
-  }
+  const data = await getData<ItemData>(url);
+  const firstItem = data[0];
+  const fromIndex = from ? getDifferenceInDays(firstItem.t, from) : 0;
+  const toIndex = to ? getDifferenceInDays(firstItem.t, to) + 1 : undefined;
+  console.log("from index: ", fromIndex);
+  console.log("to index: ", toIndex);
+  return data.slice(fromIndex, toIndex);
 }
 
 /**
  * getDataCount.
  *
  * @param {string} storeName
+ *  @param {string=} from
+ *  @param {string=} to
  * @returns {Promise<number>}
  */
-export async function getDataCount(storeName: string): Promise<number> {
-  return await count(storeName);
+export async function getDataCount(
+  storeName: string,
+  from?: string,
+  to?: string,
+): Promise<number> {
+  const query = createQuery(from, to);
+  console.log("getDateCount query:", query);
+  return await count(storeName, query);
 }
 
 /**
- * getWeatherData
+ * getWeatherData.
+ *
  * @param {string} storeName
  * @param {string=} from
  * @param {string=} to
@@ -92,61 +87,45 @@ export async function getWeatherData(
   from?: string | null,
   to?: string,
 ): Promise<Array<ItemData>> {
-  let result: Array<ItemData> = [];
-  if (from && to) {
-    result = await query<ItemData>(storeName, {
-      indexName: "t",
-      keyRange: IDBKeyRange.bound(from, to),
-    });
-  } else if (from) {
-    result = await query<ItemData>(storeName, {
-      indexName: "t",
-      keyRange: IDBKeyRange.lowerBound(from),
-    });
-  } else if (to) {
-    result = await query<ItemData>(storeName, {
-      indexName: "t",
-      keyRange: IDBKeyRange.upperBound(to),
-    });
-  } else {
-    result = await query<ItemData>(storeName);
+  const unlock = await mutex.lock();
+  const time = Date.now();
+  console.time("getWeatherData" + time);
+  //[from, to] = await getMinMaxDates(storeName, from, to);
+  console.log("from: ", from, "to: ", to);
+  const q = createQuery(from, to);
+  const _count = await count(storeName, q);
+  console.log("db count: ", _count);
+  const daysNumber = getDifferenceInDays(from, to) + 1;
+  console.log("calculated days number: ", daysNumber);
+  if(_count < daysNumber) {
+    const data = await getDataFromApi(storeName, from, addDays(to, daysNumber));
+    console.log("data from api: ", data);
+    await insertMany(storeName, data);
   }
-  if (result.length === 0) {
-    await initializeDBWithData(storeName);
-    return getWeatherData(storeName, from, to);
-  }
-  return result;
+  console.timeEnd("getWeatherData" + time);
+  unlock();
+  return query<ItemData>(storeName, q);
 }
 
 /**
- * getMinMaxYears.
- * @param  {string} storeName
- * @returns {Promise<Array<number>>}
- */
-export async function getMinMaxYears(
-  storeName: string,
-): Promise<Array<number>> {
-  const res = await Promise.all([
-    getMinimalValueByField(storeName, "t"),
-    getMaximalValueByField(storeName, "t"),
-  ]);
-  return res.map((date: string) => {
-    return getYearFromISODate(date);
-  });
-}
-
-/**
- * getMinMaxValues.
+ * getMinMaxDates.
  *
  * @param {string} storeName
- * @returns {Promise<Array<number>>}
+ * @param {string=} from
+ * @param {string=} to
+ * @returns {Promise<Array<string>>}
  */
-export async function getMinMaxValues(
+export async function getMinMaxDates(
   storeName: string,
-): Promise<Array<number>> {
-  const res = await Promise.all([
-    getMinimalValueByField(storeName, "v"),
-    getMaximalValueByField(storeName, "v"),
-  ]);
-  return res;
+  from?: string,
+  to?: string,
+): Promise<Array<string>> {
+  if(!minMaxDates[storeName]) {
+  const data = await getDataFromApi(storeName, from, to);
+  const firstItem = data[0];
+  const lastItem = data[data.length - 1];
+    minMaxDates[storeName] = [firstItem.t, lastItem.t];
+  }
+  return minMaxDates[storeName]
 }
+

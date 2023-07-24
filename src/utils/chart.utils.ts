@@ -1,11 +1,11 @@
 import type {ItemData} from "src/types";
+import { getMinMaxDates } from "../weather.service";
 import {
   addDays,
   getDifferenceInDays,
   getFirstDayOfYear,
   getLastDayOfYear,
 } from "./date.utils";
-import {getMaximalValueByField, getMinimalValueByField} from "./db.utils";
 
 export function getMinMaxValues(data: Array<ItemData>): Array<number> {
   let min = null;
@@ -105,11 +105,14 @@ export async function getChartFrame(
   offset: number,
   step: number,
 ) {
-  let fromDate: string, toDate: string;
+  let fromDate: string, toDate: string, from, to;
+  if(!fromYear || !toYear) {
+    [from, to] = await getMinMaxDates(storeName);
+  }
   if (fromYear) {
     fromDate = getFirstDayOfYear(fromYear);
   } else {
-    fromDate = await getMinimalValueByField(storeName, "t");
+    fromDate = from;
   }
   const originalFrom = fromDate;
   if (offset) {
@@ -118,7 +121,7 @@ export async function getChartFrame(
   if (toYear) {
     toDate = getLastDayOfYear(toYear);
   } else {
-    toDate = await getMaximalValueByField(storeName, "t");
+    toDate = to;
   }
   const originalTo = toDate;
   const diff = getDifferenceInDays(fromDate, toDate);

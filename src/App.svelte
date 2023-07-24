@@ -1,7 +1,8 @@
 <script lang="ts">
   import {onMount} from "svelte";
-  import {getMinMaxYears, addListener} from "./weather.service";
+  import {getMinMaxDates} from "./weather.service";
   import {setHashValue, getHashValue} from "./utils/location.utils";
+  import {getYearFromISODate} from "./utils/date.utils";
   import YearPicker from "./components/YearPicker.svelte";
   import ButtonCheckbox from "./components/ButtonCheckbox.svelte";
   import Chart from "./components/Chart.svelte";
@@ -14,7 +15,9 @@
     chart = getHashValue("chart") || STORE_TEMPERATURE_NAME;
 
   onMount(async () => {
-    [from, to] = await getMinMaxYears(chart);
+    [from, to] = (await getMinMaxDates(chart)).map((date) =>
+      getYearFromISODate(date),
+    );
   });
   function onFromYearChanged(event: {detail: string}) {
     fromYear = event.detail;
@@ -27,9 +30,6 @@
   function onChartChanged(event: {detail: string}) {
     chart = event.detail;
     setHashValue("chart", chart);
-  }
-  async function onOpenYearSelect() {
-    [from, to] = await getMinMaxYears(chart);
   }
 </script>
 
@@ -62,7 +62,6 @@
           {from}
           {to}
           on:change={onFromYearChanged}
-          on:open={onOpenYearSelect}
           placeholder="Select Start Year"
           value={fromYear}
         />
@@ -70,7 +69,6 @@
           {from}
           {to}
           on:change={onToYearChanged}
-          on:open={onOpenYearSelect}
           placeholder="Select End Year"
           value={toYear}
         />

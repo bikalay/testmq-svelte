@@ -1,5 +1,6 @@
+import {writable} from "svelte/store";
 import {DB_NAME, DB_VERSION, STORES_CONFIG} from "../db.config";
-import { Mutex } from "./mutex";
+import {Mutex} from "./mutex";
 
 let DB: IDBDatabase | null = null;
 
@@ -9,7 +10,7 @@ export type ObjectStoreIndex = {
 };
 export type ObjectStore = {
   name: string;
-  config: {autoIncrement: boolean};
+  config: {autoIncrement?: boolean, keyPath?: string};
   indexes?: ObjectStoreIndex[];
 };
 
@@ -39,7 +40,7 @@ export function initialize(
       reject(request.error);
     };
     request.onupgradeneeded = () => {
-      console.log("initialize onupgradeneeded")
+      console.log("initialize onupgradeneeded");
       const db = request.result;
       oStores.forEach((os) => {
         let store: IDBObjectStore | undefined;
@@ -59,7 +60,7 @@ export function initialize(
       });
     };
     request.onsuccess = () => {
-      console.log("initialize onsuccess")
+      console.log("initialize onsuccess");
       const db = request.result;
       resolve(db);
     };
@@ -72,12 +73,9 @@ export function initialize(
  * @returns {Promise<IDBDatabase>} - DB Instance
  */
 export async function getDB(): Promise<IDBDatabase> {
-  console.log("getDB");
   const unlock = await mutex.lock();
   if (!DB) {
     DB = await initialize(DB_NAME, DB_VERSION, STORES_CONFIG);
-  } else {
-    console.log("return existing db");
   }
   unlock();
   return DB;
@@ -86,27 +84,33 @@ export async function getDB(): Promise<IDBDatabase> {
 /**
  * Count
  * Returns number of rows in object store;
- * @param {string} objectStoreName - Object Store Name
+ * @param {string} storeName - Object Store Name
+ * @param {IndexQuery=} query - Query
  * @returns {Promise<number>} - Number of rows
  */
-export async function count(objectStoreName: string): Promise<number> {
-  try {
-    const db = await getDB();
-    const transaction = db.transaction([objectStoreName], "readonly");
-    const objectStore = transaction.objectStore(objectStoreName);
-    const request = objectStore.count();
-    return new Promise((resolve, reject) => {
-      request.onsuccess = () => {
-        resolve(request.result);
-      };
-      request.onerror = () => {
-        reject(request.error);
-      };
-    });
-  } catch (e) {
-    console.error(e);
-    console.log(objectStoreName);
+export async function count(
+  storeName: string,
+  query?: IndexQuery,
+): Promise<number> {
+  const db = await getDB();
+  const transaction = db.transaction([storeName], "readonly");
+  const objectStore = transaction.objectStore(storeName);
+  let request = null;
+  if (query) {
+    const {indexName, keyRange} = query;
+    const index = objectStore.index(indexName);
+    request = index.count(keyRange);
+  } else {
+    request = objectStore.count();
   }
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+    request.onerror = () => {
+      reject(request.error);
+    };
+  });
 }
 
 /**
@@ -164,15 +168,15 @@ export async function query<T>(
 /**
  * insertMany.
  * Inserts array of documents
- * @param {string} objectStoreName - Object Store Name
+ * @param {string} storeName - Object Store Name
  * @param {Array} data - list of data
  */
-export async function insertMany(objectStoreName: string, data: Array<any>) {
+export async function insertMany(storeName: string, data: Array<any>) {
   const db = await getDB();
-  const transaction = db.transaction([objectStoreName], "readwrite");
-  const objectStore = transaction.objectStore(objectStoreName);
+  const transaction = db.transaction([storeName], "readwrite");
+  const objectStore = transaction.objectStore(storeName);
   data.forEach((item) => {
-    objectStore.add(item);
+    objectStore.put(item);
   });
   return new Promise((resolve, reject) => {
     transaction.oncomplete = (event) => {
