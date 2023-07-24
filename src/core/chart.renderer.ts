@@ -1,4 +1,6 @@
+import {CHART_COLOR, CHART_LINE_WIDTH} from "../chart.config";
 import type {ChartData, ChartItem, ItemData} from "src/types";
+import {DrawBuilder} from "../utils/draw.builder";
 import {getChartPoints} from "../utils/chart.utils";
 import {BaseRenderer} from "./base.renderer";
 
@@ -8,7 +10,13 @@ export class ChartRenderer extends BaseRenderer {
   label: string;
   offsetX: number;
   offsetY: number;
-  constructor(chart: ChartData, width: number, height: number, offsetX: number, offsetY: number) {
+  constructor(
+    chart: ChartData,
+    width: number,
+    height: number,
+    offsetX: number,
+    offsetY: number,
+  ) {
     super(width, height);
     this.label = chart.label;
     this.name = chart.name;
@@ -17,7 +25,7 @@ export class ChartRenderer extends BaseRenderer {
     this.offsetY = offsetY;
   }
 
-  set data (value: Array<ItemData>) {
+  set data(value: Array<ItemData>) {
     this.#data = getChartPoints(
       value,
       this.width,
@@ -33,16 +41,18 @@ export class ChartRenderer extends BaseRenderer {
 
   render() {
     this.clear();
-    this.context.beginPath();
+    const drawBuilder = new DrawBuilder(
+      this.context,
+      CHART_LINE_WIDTH,
+      CHART_COLOR,
+    ).beginPath();
     this.data.forEach((item, index) => {
       if (index === 0) {
-        this.context.moveTo(item.x, item.y);
+        drawBuilder.moveTo(item.x, item.y);
       } else {
-        this.context.lineTo(item.x, item.y);
+        drawBuilder.lineTo(item.x, item.y);
       }
     });
-    this.context.strokeStyle = "#000";
-    this.context.lineWidth = 2;
-    this.context.stroke();
+    drawBuilder.stroke();
   }
 }

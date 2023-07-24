@@ -1,6 +1,6 @@
 /**
  * Mutex.
- * Mutex browser realization
+ * Simple mutes for browser
  */
 export class Mutex {
   _queue: Array<any>;

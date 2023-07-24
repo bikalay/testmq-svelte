@@ -11,8 +11,8 @@ export class BaseRenderer {
     }
 
     render () {
-
     }
+
 
     draw () {
         this.render();

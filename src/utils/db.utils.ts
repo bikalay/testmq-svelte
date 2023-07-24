@@ -1,4 +1,3 @@
-import {writable} from "svelte/store";
 import {DB_NAME, DB_VERSION, STORES_CONFIG} from "../db.config";
 import {Mutex} from "./mutex";
 

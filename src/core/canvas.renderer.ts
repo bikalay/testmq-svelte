@@ -1,3 +1,4 @@
+import { CHART_OFFSET_X, CHART_OFFSET_Y } from "../chart.config";
 import type {ChartData} from "src/types";
 import {AxesRenderer} from "./axes.renderer";
 import {ChartRenderer} from "./chart.renderer";
@@ -19,29 +20,29 @@ export class CanvasRenderer {
       chart,
       this.canvas.width,
       this.canvas.height,
-      30,
-      20,
+      CHART_OFFSET_X,
+      CHART_OFFSET_Y,
     );
     this.axesRenderer = new AxesRenderer(
       chart.label,
       this.canvas.width,
       this.canvas.height,
-      30,
-      20,
+      CHART_OFFSET_X,
+      CHART_OFFSET_Y,
     );
     this.dateScaleRenderer = new DateScaleRenderer(
       chart.data,
       this.canvas.width,
       this.canvas.height,
-      30,
-      this.canvas.height - 20,
+      CHART_OFFSET_X,
+      CHART_OFFSET_Y,
     );
     this.valuesScaleRenderer = new ValuesScale(
       chart.data,
       this.canvas.width,
       this.canvas.height,
-      30,
-      20,
+      CHART_OFFSET_X,
+      CHART_OFFSET_Y,
     );
     this.#chart = chart;
     this.draw();

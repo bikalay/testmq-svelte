@@ -1,6 +1,15 @@
+import {
+  AXES_COLOR,
+  AXES_LINE_WIDTH,
+  SCALE_FONT,
+  SCALE_LARGE_DASH,
+  SCALE_SMALL_DASH,
+  SCALE_VALUES_OFFSET,
+} from "../chart.config";
 import type {ItemData} from "src/types";
 import {getYearScalePoints} from "../utils/chart.utils";
 import {BaseRenderer} from "./base.renderer";
+import {DrawBuilder} from "../utils/draw.builder";
 
 export class DateScaleRenderer extends BaseRenderer {
   data: Array<ItemData> = [];
@@ -25,17 +34,24 @@ export class DateScaleRenderer extends BaseRenderer {
       this.width,
       this.offsetX,
     );
-    this.context.beginPath();
-    this.context.font = "12px serif";
-    this.context.textAlign = "center";
+    const drawBuilder = new DrawBuilder(
+      this.context,
+      AXES_LINE_WIDTH,
+      AXES_COLOR,
+      SCALE_FONT,
+      "center",
+    ).beginPath();
     preparedData.map((item) => {
-      const dashSize = item.label ? 5 : 3;
-      this.context.moveTo(item.x + 0.5, this.offsetY - dashSize);
-      this.context.lineTo(item.x + 0.5, this.offsetY + dashSize);
-      this.context.fillText(item.label, item.x, this.offsetY + 15);
+      const dashSize = item.label ? SCALE_LARGE_DASH : SCALE_SMALL_DASH;
+      drawBuilder
+        .moveTo(item.x, this.height - this.offsetY - dashSize)
+        .lineTo(item.x, this.height - this.offsetY + dashSize)
+        .fillText(
+          item.label,
+          item.x,
+          this.height - this.offsetY + SCALE_VALUES_OFFSET,
+        );
     });
-    this.context.strokeStyle = "red";
-    this.context.lineWidth = 1;
-    this.context.stroke();
+    drawBuilder.stroke();
   }
 }

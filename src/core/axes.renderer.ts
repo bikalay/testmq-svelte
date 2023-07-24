@@ -1,4 +1,9 @@
+import { DrawBuilder } from "../utils/draw.builder";
+import { AXES_COLOR, AXES_LINE_WIDTH } from "../chart.config";
 import { BaseRenderer } from "./base.renderer";
+const ARROW_HEIGHT = 10;
+const ARROW_WIDTH = 5;
+const ARROW_OFFSET = 2;
 
 export class AxesRenderer extends BaseRenderer {
   name: string;
@@ -14,20 +19,19 @@ export class AxesRenderer extends BaseRenderer {
   }
   render() {
     this.clear();
-    this.context.beginPath();
-    this.context.moveTo(this.offsetX, this.height-this.offsetY);
-    this.context.lineTo(this.offsetX, 2);
-    this.context.lineTo(this.offsetX - 5, 10);
-    this.context.moveTo(this.offsetX, 2);
-    this.context.lineTo(this.offsetX + 5, 10);
-    this.context.moveTo(this.offsetX, this.height-this.offsetY);
-    this.context.lineTo(this.width-2, this.height-this.offsetY);
-    this.context.lineTo(this.width-10, this.height-this.offsetY+5);
-    this.context.moveTo(this.width-2, this.height-this.offsetY);
-    this.context.lineTo(this.width-10, this.height-this.offsetY-5);
-    this.context.strokeStyle = 'red';
-    this.context.lineWidth = 2;
-    this.context.stroke();
+    new DrawBuilder(this.context, AXES_LINE_WIDTH, AXES_COLOR)
+    .beginPath()
+    .moveTo(this.offsetX, this.height-this.offsetY)
+    .lineTo(this.offsetX, ARROW_OFFSET)
+    .lineTo(this.offsetX - ARROW_WIDTH, ARROW_HEIGHT)
+    .moveTo(this.offsetX, ARROW_OFFSET)
+    .lineTo(this.offsetX + ARROW_WIDTH, ARROW_HEIGHT)
+    .moveTo(this.offsetX, this.height-this.offsetY)
+    .lineTo(this.width-ARROW_OFFSET, this.height-this.offsetY)
+    .lineTo(this.width-ARROW_HEIGHT, this.height-this.offsetY+ARROW_WIDTH)
+    .moveTo(this.width-ARROW_OFFSET, this.height-this.offsetY)
+    .lineTo(this.width-ARROW_HEIGHT, this.height-this.offsetY-ARROW_WIDTH)
+    .stroke();
   }
 
   draw() {
