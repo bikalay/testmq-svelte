@@ -1,12 +1,19 @@
 import type {ItemData} from "src/types";
-import { getMinMaxDates } from "../weather.service";
+import {getMinMaxDates} from "../weather.service";
 import {
   addDays,
+  formatDate,
   getDifferenceInDays,
   getFirstDayOfYear,
   getLastDayOfYear,
 } from "./date.utils";
 
+/**
+ * getMinMaxValues.
+ * Returns array where first element is min value and second element is max value
+ * @param {Array<ItemData>} data - Items array
+ * @returns {Array<number>} - [min, max];
+ */
 export function getMinMaxValues(data: Array<ItemData>): Array<number> {
   let min = null;
   let max = null;
@@ -27,6 +34,14 @@ export function getMinMaxValues(data: Array<ItemData>): Array<number> {
   return [min, max];
 }
 
+/**
+ * getChartPoints.
+ * @param {Array<ItemData>} data - chart data
+ * @param {number} width - chart width
+ * @param {number} height - chart height
+ * @param {number} offsetX - chart offset x
+ * @param {number} offsetY - chart offset y
+ */
 export function getChartPoints(
   data: Array<ItemData>,
   width: number,
@@ -46,57 +61,53 @@ export function getChartPoints(
   });
 }
 
-export function getYearScalePoints(data: Array<ItemData>, width, offsetX) {
-  if ((width - offsetX) / data.length > 60) {
-    const kx = (width - offsetX * 2) / (data.length - 1);
-    return data.map((item, index) => {
-      return {
-        ...item,
-        x: offsetX + index * kx,
-        label: item.t.split("-").reverse().join("."),
-      };
-    });
-  }
-  if ((width - offsetX) / data.length > 30) {
-    const kx = (width - offsetX * 2) / (data.length - 1);
-    return data.map((item, index) => {
-      return {
-        ...item,
-        x: offsetX + index * kx,
-        label: index % 2 === 0 ? item.t.split("-").reverse().join(".") : "",
-      };
-    });
-  }
-  if ((width - offsetX) / data.length > 15) {
-    const kx = (width - offsetX * 2) / (data.length - 1);
-    return data.map((item, index) => {
-      return {
-        ...item,
-        x: offsetX + index * kx,
-        label: index % 4 === 0 ? item.t.split("-").reverse().join(".") : "",
-      };
-    });
-  }
-  if ((width - offsetX) / data.length > 5) {
-    const kx = (width - offsetX * 2) / (data.length - 1);
-    return data.map((item, index) => {
-      return {
-        ...item,
-        x: offsetX + index * kx,
-        label: index % 12 === 0 ? item.t.split("-").reverse().join(".") : "",
-      };
-    });
-  }
+/**
+ * getYearScalePoints.
+ *
+ * @param {Array<ItemData>} data
+ * @param {number} width
+ * @param {number=} offsetX
+ */
+export function getYearScalePoints(
+  data: Array<ItemData>,
+  width: number,
+  offsetX: number = 0,
+) {
   const kx = (width - offsetX * 2) / (data.length - 1);
-  return data.map((item, index) => {
-    return {
-      ...item,
-      x: offsetX + index * kx,
-      label: index % 20 === 0 ? item.t.split("-").reverse().join(".") : "",
-    };
-  });
+  const daySize = (width - offsetX) / data.length;
+  const minDaySize = 120;
+
+  if (daySize > minDaySize) {
+    return data.map((item, index) => {
+      return {
+        ...item,
+        x: Math.floor(offsetX + index * kx),
+        label: formatDate(item.t),
+      };
+    });
+  } else {
+    return data.map((item, index) => {
+      return {
+        ...item,
+        x: Math.floor(offsetX + index * kx),
+        label:
+          index % Math.floor(minDaySize / daySize) === 0
+            ? formatDate(item.t)
+            : "",
+      };
+    });
+  }
 }
 
+/**
+ * getChartFrame.
+ * @param {string} storeName
+ * @param {string} fromYear
+ * @param {string} toYear
+ * @param {number} width
+ * @param {number} offset
+ * @param {number} step
+ */
 export async function getChartFrame(
   storeName: string,
   fromYear: string,
@@ -105,24 +116,16 @@ export async function getChartFrame(
   offset: number,
   step: number,
 ) {
-  let fromDate: string, toDate: string, from, to;
-  if(!fromYear || !toYear) {
+  let fromDate: string, toDate: string, from: string, to: string;
+  if (!fromYear || !toYear) {
     [from, to] = await getMinMaxDates(storeName);
   }
-  if (fromYear) {
-    fromDate = getFirstDayOfYear(fromYear);
-  } else {
-    fromDate = from;
-  }
+  fromDate = fromYear ? getFirstDayOfYear(fromYear) : from;
   const originalFrom = fromDate;
   if (offset) {
     fromDate = addDays(fromDate, Math.floor(offset / step));
   }
-  if (toYear) {
-    toDate = getLastDayOfYear(toYear);
-  } else {
-    toDate = to;
-  }
+  toDate = toYear ? getLastDayOfYear(toYear) : to;
   const originalTo = toDate;
   const diff = getDifferenceInDays(fromDate, toDate);
   if (diff > width / step) {
@@ -131,12 +134,20 @@ export async function getChartFrame(
   return [fromDate, toDate, originalFrom, originalTo];
 }
 
-export function getYScalePont(
+/**
+ * getYScalePont.
+ * @param {number} point
+ * @param {number} min
+ * @param {number} max
+ * @param {number} height
+ * @param {number=} offsetY
+ */
+export function getYScalePoint(
   point: number,
   min: number,
   max: number,
   height: number,
-  offsetY: number,
+  offsetY: number = 0,
 ): number {
   const ky = (height - offsetY * 2) / (max - min);
   return height - (offsetY + Math.floor((point - min) * ky));

@@ -34,13 +34,11 @@ export function initialize(
   oStores: Array<ObjectStore>,
 ): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    console.log("initialize db");
     const request = window.indexedDB.open(dbName, dbVersion);
     request.onerror = () => {
       reject(request.error);
     };
     request.onupgradeneeded = () => {
-      console.log("initialize onupgradeneeded");
       const db = request.result;
       oStores.forEach((os) => {
         let store: IDBObjectStore | undefined;
@@ -60,7 +58,6 @@ export function initialize(
       });
     };
     request.onsuccess = () => {
-      console.log("initialize onsuccess");
       const db = request.result;
       resolve(db);
     };

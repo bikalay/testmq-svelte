@@ -1,14 +1,10 @@
 import type {ItemData} from "./types";
 import {getData} from "./utils/api.utils";
 import type {IndexQuery} from "./utils/db.utils";
-import {
-  count,
-  insertMany,
-  query,
-} from "./utils/db.utils";
+import {count, insertMany, query} from "./utils/db.utils";
 import {STORE_TEMPERATURE_NAME, STORE_PRECIPITATION_NAME} from "./db.config";
 import {addDays, getDifferenceInDays} from "./utils/date.utils";
-import { Mutex } from "./utils/mutex";
+import {Mutex} from "./utils/mutex";
 export const TEMPERATURE_URL = "/temperature.json";
 export const PRECIPITATION_URL = "/precipitation.json";
 
@@ -20,14 +16,6 @@ export function createQuery(from: string, to: string) {
   const query: IndexQuery = {indexName: "t"};
   if (from && to) {
     query.keyRange = IDBKeyRange.bound(from, to);
-    return query;
-  }
-  if (from) {
-    query.keyRange = IDBKeyRange.lowerBound(from);
-    return query;
-  }
-  if (to) {
-    query.keyRange = IDBKeyRange.upperBound(to);
     return query;
   }
   return null;
@@ -51,8 +39,6 @@ export async function getDataFromApi(
   const firstItem = data[0];
   const fromIndex = from ? getDifferenceInDays(firstItem.t, from) : 0;
   const toIndex = to ? getDifferenceInDays(firstItem.t, to) + 1 : undefined;
-  console.log("from index: ", fromIndex);
-  console.log("to index: ", toIndex);
   return data.slice(fromIndex, toIndex);
 }
 
@@ -70,7 +56,6 @@ export async function getDataCount(
   to?: string,
 ): Promise<number> {
   const query = createQuery(from, to);
-  console.log("getDateCount query:", query);
   return await count(storeName, query);
 }
 
@@ -78,31 +63,23 @@ export async function getDataCount(
  * getWeatherData.
  *
  * @param {string} storeName
- * @param {string=} from
- * @param {string=} to
+ * @param {string} from
+ * @param {string} to
  * @returns {Promise<Array<ItemData>>}
  */
 export async function getWeatherData(
   storeName: string,
-  from?: string | null,
-  to?: string,
+  from: string | null,
+  to: string,
 ): Promise<Array<ItemData>> {
   const unlock = await mutex.lock();
-  const time = Date.now();
-  console.time("getWeatherData" + time);
-  //[from, to] = await getMinMaxDates(storeName, from, to);
-  console.log("from: ", from, "to: ", to);
   const q = createQuery(from, to);
   const _count = await count(storeName, q);
-  console.log("db count: ", _count);
   const daysNumber = getDifferenceInDays(from, to) + 1;
-  console.log("calculated days number: ", daysNumber);
-  if(_count < daysNumber) {
+  if (_count < daysNumber) {
     const data = await getDataFromApi(storeName, from, addDays(to, daysNumber));
-    console.log("data from api: ", data);
     await insertMany(storeName, data);
   }
-  console.timeEnd("getWeatherData" + time);
   unlock();
   return query<ItemData>(storeName, q);
 }
@@ -120,12 +97,11 @@ export async function getMinMaxDates(
   from?: string,
   to?: string,
 ): Promise<Array<string>> {
-  if(!minMaxDates[storeName]) {
-  const data = await getDataFromApi(storeName, from, to);
-  const firstItem = data[0];
-  const lastItem = data[data.length - 1];
+  if (!minMaxDates[storeName]) {
+    const data = await getDataFromApi(storeName, from, to);
+    const firstItem = data[0];
+    const lastItem = data[data.length - 1];
     minMaxDates[storeName] = [firstItem.t, lastItem.t];
   }
-  return minMaxDates[storeName]
+  return minMaxDates[storeName];
 }
-

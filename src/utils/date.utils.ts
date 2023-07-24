@@ -53,7 +53,6 @@ export function getLastDayOfYear(year: string): string {
   return year + "-12-31";
 }
 
-
 /**
  * getDifferenceInDays.
  * Returns two days difference in days
@@ -66,4 +65,14 @@ export function getDifferenceInDays(day1: string, day2: string): number {
   const differenceInTime = new Date(day2).getTime() - new Date(day1).getTime();
   const differenceInDays = differenceInTime / (1000 * 3600 * 24);
   return differenceInDays;
+}
+
+/**
+ * formatDate.
+ *
+ * @param {string} date - date string in format YYYY-MM-DD
+ * @returns {string} - date string in format DD.MM.YYYY
+ */
+export function formatDate(date: string): string {
+  return date.split("-").reverse().join(".");
 }

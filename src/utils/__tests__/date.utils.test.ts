@@ -5,6 +5,7 @@ import {
   getFirstDayOfYear,
   getLastDayOfYear,
   getDifferenceInDays,
+  formatDate,
 } from "../date.utils";
 
 describe("Date Utils", () => {
@@ -34,8 +35,14 @@ describe("Date Utils", () => {
     });
   });
   describe("getDifferenceInDays", () => {
-      it("should return correct number of days", () => {
-        expect(getDifferenceInDays("2022-01-01", "2022-01-15")).toBe(14);
-      });
+    it("should return correct number of days", () => {
+      expect(getDifferenceInDays("2022-01-01", "2022-01-15")).toBe(14);
+    });
+  });
+  describe("fromatDate", () => {
+    it("should return date string with format DD.MM.YYYY", () => {
+      const date = formatDate("2017-02-14");
+      expect(date).toBe("14.02.2017");
+    });
   });
 });

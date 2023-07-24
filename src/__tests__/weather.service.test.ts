@@ -32,7 +32,11 @@ describe("Weather Service", () => {
       await clear(STORE_TEMPERATURE_NAME);
     });
     it("should return all temperature data", async () => {
-      const temperature = await getWeatherData(STORE_TEMPERATURE_NAME);
+      const temperature = await getWeatherData(
+        STORE_TEMPERATURE_NAME,
+        "2023-01-01",
+        "2023-01-06",
+      );
       expect(require("../utils/api.utils").getData).toHaveBeenCalledWith(
         TEMPERATURE_URL,
       );
@@ -44,6 +48,7 @@ describe("Weather Service", () => {
       const temperature = await getWeatherData(
         STORE_TEMPERATURE_NAME,
         "2023-01-04",
+        "2023-01-06",
       );
       expect(temperature).toHaveLength(3);
       expect(temperature[0].v).toBe(4);
@@ -52,7 +57,7 @@ describe("Weather Service", () => {
     it("should return date before 2023-1-4", async () => {
       const temperature = await getWeatherData(
         STORE_TEMPERATURE_NAME,
-        null,
+        "2023-01-01",
         "2023-01-03",
       );
       expect(temperature).toHaveLength(3);
@@ -90,8 +95,8 @@ describe("Weather Service", () => {
       const temperature = await getWeatherData(
         STORE_TEMPERATURE_NAME,
         "2023-01-04",
+        "2023-01-06",
       );
-      console.log("temperature!", temperature);
       expect(temperature).toHaveLength(3);
       expect(temperature[0].v).toBe(4);
       expect(temperature[0].t).toBe("2023-01-04");
@@ -99,7 +104,7 @@ describe("Weather Service", () => {
     it("should return date before 2023-1-4", async () => {
       const temperature = await getWeatherData(
         STORE_TEMPERATURE_NAME,
-        null,
+        "2023-01-01",
         "2023-01-03",
       );
       expect(temperature).toHaveLength(3);
@@ -107,10 +112,12 @@ describe("Weather Service", () => {
       expect(temperature[0].t).toBe("2023-01-01");
     });
     it("should return all temperature data", async () => {
-      const temperature = await getWeatherData(STORE_TEMPERATURE_NAME);
-      expect(require("../utils/api.utils").getData).toHaveBeenCalledWith(
-        TEMPERATURE_URL,
+      const temperature = await getWeatherData(
+        STORE_TEMPERATURE_NAME,
+        "2023-01-01",
+        "2023-01-06",
       );
+      expect(require("../utils/api.utils").getData).toHaveBeenCalledTimes(0);
       expect(temperature).toHaveLength(6);
       expect(temperature[0].v).toBe(1);
       expect(temperature[0].t).toBe("2023-01-01");
@@ -142,20 +149,17 @@ describe("Weather Service", () => {
       await clear(STORE_TEMPERATURE_NAME);
     });
     it("should return 0 for empty db", async () => {
-      const count = await getDataCount(STORE_TEMPERATURE_NAME);
+      const count = await getDataCount(
+        STORE_TEMPERATURE_NAME,
+        "2023-01-01",
+        "2023-01-06",
+      );
       expect(count).toBe(0);
     });
     it("should return correct count for initialized db", async () => {
-      await getWeatherData(STORE_TEMPERATURE_NAME);
+      await getWeatherData(STORE_TEMPERATURE_NAME, "2023-01-01", "2023-01-06");
       const count = await getDataCount(STORE_TEMPERATURE_NAME);
       expect(count).toBe(6);
     });
   });
-  // describe("getMinMaxValues", () => {
-  //   it("should return correct min and max values", async () => {
-  //     const [min, max] = await getMinMaxValues(STORE_TEMPERATURE_NAME);
-  //     expect(min).toBe(1);
-  //     expect(max).toBe(6);
-  //   });
-  // });
 });

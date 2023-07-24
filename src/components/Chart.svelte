@@ -36,7 +36,6 @@
         offset,
         step,
       );
-      console.log("getWeatherData, from", from, to)
       const data = await getWeatherData(chart, from, to);
       dataLoaded = !!data.length;
       canvasRenderer.chart = {

@@ -14,6 +14,8 @@
     scale = "6",
     chart = getHashValue("chart") || STORE_TEMPERATURE_NAME;
 
+
+
   onMount(async () => {
     [from, to] = (await getMinMaxDates(chart)).map((date) =>
       getYearFromISODate(date),
@@ -77,7 +79,7 @@
         <span>Scale: </span><input
           type="range"
           min="6"
-          max="65"
+          max="100"
           bind:value={scale}
         />
         <Chart {fromYear} {toYear} {scale} {chart} />

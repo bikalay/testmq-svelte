@@ -16,10 +16,8 @@ global.fetch = jest.fn((url) => {
 }) as jest.Mock;
 
 jest.mock("../../properties", () => {
-  return {API_ENDPOINT: ""}
+  return {API_ENDPOINT: ""};
 });
-
-
 
 describe("API Utils", () => {
   describe("getData", () => {
@@ -31,7 +29,19 @@ describe("API Utils", () => {
       expect(fetch).toBeCalledWith("/valid");
     });
     it("should throw error", async () => {
-      expect(async () => await getData<ItemData>("/invalid")).rejects.toThrow(Error);
+      expect(async () => await getData<ItemData>("/invalid")).rejects.toThrow(
+        Error,
+      );
+    });
+  });
+  describe("getData parallel calls", () => {
+    it("parallel calls should make one api call", async () => {
+      await Promise.all([
+        getData<ItemData>("/valid"),
+        getData<ItemData>("/valid"),
+        getData<ItemData>("/valid"),
+      ]);
+      expect(global.fetch).toHaveReturnedTimes(1);
     });
   });
 });
