@@ -32,7 +32,6 @@ export class ValuesScale extends BaseRenderer {
     const iMax = Math.floor(max * k) / k;
     for (let i = iMin; i < iMax; i += step) {
       const y = getYScalePoint(i, min, max, this.height, this.offsetY);
-      console.log(y, this.offsetY);
       if (y <= this.height - this.offsetY) {
         this.context.moveTo(this.offsetX - 5, y);
         this.context.lineTo(this.offsetX + 5, y);
