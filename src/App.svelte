@@ -76,7 +76,7 @@
       <div>
         <span>Scale: </span><input
           type="range"
-          min="1"
+          min="3"
           max="100"
           bind:value={scale}
         />

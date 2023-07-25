@@ -16,6 +16,7 @@
   export let scale = "5";
   export let chart = STORE_TEMPERATURE_NAME;
   let dataLoaded = false;
+  let prevStep = null;
 
   async function setChartData(
     chart: string,
@@ -25,6 +26,7 @@
     step: number = 5,
   ) {
     if (canvasRenderer && canvasEl) {
+
       const [from, to, originalFrom, originalTo] = await getChartFrame(
         chart,
         fromYear,
@@ -33,6 +35,7 @@
         offset,
         step,
       );
+      console.log(offset, step, prevStep);
       const data = await getWeatherData(chart, from, to);
       dataLoaded = !!data.length;
       canvasRenderer.chart = {
@@ -48,6 +51,7 @@
           scrollWraper.scrollLeft = scrollPosition;
         }
       }
+      prevStep = step;
     }
   }
 
@@ -55,7 +59,7 @@
     chart,
     fromYear,
     toYear,
-    scrollWraper ? scrollWraper.scrollLeft : 0,
+    scrollWraper ? (scrollWraper.scrollLeft / prevStep) * scale : 0,
     parseInt(scale),
   );
 
@@ -66,7 +70,8 @@
     });
     await setChartData(chart, fromYear, toYear, 0, parseInt(scale));
     let timeoutId = false;
-    scrollWraper.onscroll = function () {
+    scrollWraper.onscroll = function (event) {
+      event.stopPropagation();
       if (timeoutId) {
         clearTimeout(timeoutId);
         timeoutId = null;
