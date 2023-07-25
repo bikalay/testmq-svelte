@@ -35,7 +35,7 @@ export class ValuesScale extends BaseRenderer {
       SCALE_FONT,
       "right",
     ).beginPath();
-    let step = (max - min) / 10;
+    let step = (max - min) / 20;
     const k = step < 1 ? 10 : 1;
 
     step = Math.floor(step * k) / k;
