@@ -45,12 +45,14 @@ export class DateScaleRenderer extends BaseRenderer {
       const dashSize = item.label ? SCALE_LARGE_DASH : SCALE_SMALL_DASH;
       drawBuilder
         .moveTo(item.x, this.height - this.offsetY - dashSize)
-        .lineTo(item.x, this.height - this.offsetY + dashSize)
-        .fillText(
+        .lineTo(item.x, this.height - this.offsetY + dashSize);
+      if (item.label) {
+        drawBuilder.fillText(
           item.label,
           item.x,
           this.height - this.offsetY + SCALE_VALUES_OFFSET,
         );
+      }
     });
     drawBuilder.stroke();
   }

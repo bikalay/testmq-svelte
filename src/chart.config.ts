@@ -1,0 +1,10 @@
+export const AXES_COLOR = "black";
+export const AXES_LINE_WIDTH = 1;
+export const SCALE_LARGE_DASH = 5;
+export const SCALE_SMALL_DASH = 2;
+export const SCALE_FONT = "12px serif";
+export const SCALE_VALUES_OFFSET = 15;
+export const CHART_COLOR = "blue";
+export const CHART_LINE_WIDTH = 1;
+export const CHART_OFFSET_X = 30;
+export const CHART_OFFSET_Y = 20;

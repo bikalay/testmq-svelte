@@ -7,7 +7,6 @@ import {
   AXES_LINE_WIDTH,
   SCALE_FONT,
   SCALE_LARGE_DASH,
-  SCALE_VALUES_OFFSET,
 } from "../chart.config";
 
 export class ValuesScale extends BaseRenderer {
@@ -40,6 +39,7 @@ export class ValuesScale extends BaseRenderer {
     const k = step < 1 ? 10 : 1;
 
     step = Math.floor(step * k) / k;
+    step = step || 0.1;
     const iMin = Math.floor(min * k) / k;
     const iMax = Math.floor(max * k) / k;
     for (let i = iMin; i < iMax; i += step) {

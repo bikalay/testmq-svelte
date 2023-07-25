@@ -11,10 +11,8 @@
     to,
     fromYear = getHashValue("from") || "",
     toYear = getHashValue("to") || "",
-    scale = "6",
+    scale = "10",
     chart = getHashValue("chart") || STORE_TEMPERATURE_NAME;
-
-
 
   onMount(async () => {
     [from, to] = (await getMinMaxDates(chart)).map((date) =>
@@ -50,7 +48,7 @@
       </div>
       <div class="mb-5">
         <ButtonCheckbox
-          label="Preseption"
+          label="Percipitation"
           value={STORE_PRECIPITATION_NAME}
           name="chart-type"
           selectedValue={chart}
@@ -78,7 +76,7 @@
       <div>
         <span>Scale: </span><input
           type="range"
-          min="6"
+          min="1"
           max="100"
           bind:value={scale}
         />

@@ -1,10 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte";
   import {CanvasRenderer} from "../core/canvas.renderer";
-  import {
-    getWeatherData,
-    getDataCount,
-  } from "../weather.service";
+  import {getWeatherData, getDataCount} from "../weather.service";
   import {
     addDays,
     getFirstDayOfYear,
@@ -43,7 +40,14 @@
         name: chart,
       };
       const daysNumber = getDifferenceInDays(originalFrom, originalTo);
-      scrollEl.style.width = daysNumber * step + "px";
+      const scrollSize = daysNumber * step;
+      if (scrollSize !== scrollEl.clientWidth) {
+        scrollEl.style.width = scrollSize + "px";
+        const scrollPosition = getDifferenceInDays(originalFrom, from) * step;
+        if (scrollWraper.scrollLeft != scrollPosition) {
+          scrollWraper.scrollLeft = scrollPosition;
+        }
+      }
     }
   }
 
@@ -87,18 +91,33 @@
   });
 </script>
 
-<div style="width: 800px;">
+<div class="chart-wrapper">
   <h1 style={dataLoaded ? "display: none" : ""}>Loading...</h1>
   <canvas
-    style="width: 800px; height: 500px;position: absolute; display:{dataLoaded ? 'block' : 'block'}"
+    style="display:{dataLoaded ? 'block' : 'block'}"
     width="800"
     height="500"
     bind:this={canvasEl}
   />
-  <div
-    style="overflow-x: scroll; max-width: 100%; width:800px; position: absolute; height: 520px;"
-    bind:this={scrollWraper}
-  >
+  <div class="scroll-wrapper" bind:this={scrollWraper}>
     <div bind:this={scrollEl}>&nbsp;</div>
   </div>
 </div>
+
+<style>
+  .chart-wrapper {
+    width: 800px;
+  }
+  .chart-wrapper canvas {
+    width: 800px;
+    height: 500px;
+    position: absolute;
+  }
+  .scroll-wrapper {
+    overflow-x: scroll;
+    max-width: 100%;
+    width: 800px;
+    position: absolute;
+    height: 520px;
+  }
+</style>

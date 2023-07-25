@@ -7,13 +7,12 @@
   export let value = "";
   $: years = new Array(to - from).fill(0).map((_, index) => from + index);
   function onYearSelected(event) {
-    dispatch('change', event.target.value);
-  };
-
+    dispatch("change", event.target.value);
+  }
 </script>
 
 <div class="year-picker w-100">
-  <select class="w-100" on:change={onYearSelected} bind:value={value}>
+  <select class="w-100" on:change={onYearSelected} bind:value>
     <option value="">{placeholder}</option>
     {#each years as year}
       <option value={year.toString()}>{year}</option>
@@ -25,6 +24,7 @@
   .year-picker:first-child {
     border-right: none;
   }
+
   .year-picker select {
     color: gray;
     outline: none;
@@ -42,6 +42,7 @@
   .year-picker {
     position: relative;
   }
+
   .year-picker:after {
     content: "";
     position: absolute;
